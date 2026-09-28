@@ -1,0 +1,29 @@
+# Sample tickets for:  bin/ticketing --file data/input/sample_tickets.txt
+# Each ticket has SUBJECT / DESCRIPTION / PRIORITY and tickets are separated by ---
+# A line without a KEY: continues the previous field.
+
+SUBJECT: Payment failed but money deducted
+DESCRIPTION: My payment failed at checkout but the amount of Rs 1499 was still deducted
+  from my bank account. Transaction ID TXN-88213.
+PRIORITY: P1
+---
+SUBJECT: Cannot receive OTP
+DESCRIPTION: I am not getting the OTP for two factor login on my phone.
+PRIORITY: P2
+---
+SUBJECT: Wrong size delivered
+DESCRIPTION: I ordered size 9 but got size 7. Order ORD-6620. Can I exchange it?
+PRIORITY: P2
+---
+SUBJECT: App freezes on checkout
+DESCRIPTION: The iPhone app freezes whenever I tap Pay. Terrible experience, very annoying.
+PRIORITY: P1
+---
+SUBJECT: What are your support hours?
+DESCRIPTION: I would like to speak to someone on the phone. What are your hours?
+PRIORITY: P2
+---
+# Same as the first ticket (written on one line) -> caught as a DUPLICATE
+SUBJECT: Payment failed but money deducted
+DESCRIPTION: My payment failed at checkout but the amount of Rs 1499 was still deducted from my bank account. Transaction ID TXN-88213.
+PRIORITY: P1
