@@ -25,9 +25,13 @@ std::optional<TicketRecord> FileIdempotencyStore::find(const std::string& key) c
 void FileIdempotencyStore::remember(const std::string& key, const TicketRecord& record) {
     std::ofstream out(indexFile_, std::ios::app);
     if (!out) throw std::runtime_error("Could not open " + indexFile_.string());
-    out << key << '\t' << record.ticketId << '\t' << toString(record.category) << '\t'
-        << toString(record.sentiment) << '\t' << record.sentimentScore << '\t' << record.state
-        << '\t' << text::escapeField(record.reply) << '\n';
+    out << text::escapeField(key) << '\t'
+        << text::escapeField(record.ticketId) << '\t'
+        << toString(record.category) << '\t'
+        << toString(record.sentiment) << '\t'
+        << record.sentimentScore << '\t'
+        << text::escapeField(record.state) << '\t'
+        << text::escapeField(record.reply) << '\n';
     records_[key] = record;
 }
 
@@ -48,7 +52,8 @@ void FileIdempotencyStore::load() {
         } catch (const std::exception&) {
             continue;
         }
-        records_[fields[0]] =
-            TicketRecord{fields[1], *category, *sentiment, score, fields[5], text::unescapeField(fields[6])};
+        records_[text::unescapeField(fields[0])] =
+            TicketRecord{text::unescapeField(fields[1]), *category, *sentiment, score,
+                         text::unescapeField(fields[5]), text::unescapeField(fields[6])};
     }
 }

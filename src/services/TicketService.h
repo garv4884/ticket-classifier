@@ -27,6 +27,9 @@ public:
                   ITicketRepository& repository, IIdempotencyStore& idempotencyStore,
                   IdGenerator& idGenerator);
 
+    static constexpr std::size_t kMaxSubjectLength = 256;
+    static constexpr std::size_t kMaxDescriptionLength = 8192;
+
     SubmissionResult submit(const TicketRequest& request);
 
 private:

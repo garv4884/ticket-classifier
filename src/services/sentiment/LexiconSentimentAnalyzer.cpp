@@ -76,6 +76,12 @@ SentimentResult LexiconSentimentAnalyzer::analyze(const std::string& input) cons
 
 bool LexiconSentimentAnalyzer::isShouting(const std::string& token) {
     if (token.size() < 3) return false;
+    // Common acronyms or abbreviations should not be treated as shouting
+    static const std::unordered_set<std::string> knownAcronyms{
+        "API", "AWS", "SQL", "OTP", "USD", "INR", "EUR", "GBP", "CAD", "AUD", "GST", "VAT", "SLA", "URL", "HTTP", "HTTPS", "JSON", "XML", "CSS", "HTML", "SDK", "APP", "P0", "P1", "P2"
+    };
+    if (knownAcronyms.count(token)) return false;
+
     return std::all_of(token.begin(), token.end(), [](unsigned char c) {
         return !std::isalpha(c) || std::isupper(c);
     });

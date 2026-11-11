@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <string>
 
 // Produces TKT-0001, TKT-0002, ... starting from the given number, so a new
@@ -11,5 +12,5 @@ public:
     std::string next();
 
 private:
-    int nextNumber_;
+    std::atomic<int> nextNumber_;
 };

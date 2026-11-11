@@ -67,7 +67,20 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        if (options.reset) std::filesystem::remove_all(options.dataDir);
+        // Prevent arbitrary directory deletion or escaping the application root.
+        const std::filesystem::path canonicalDataDir =
+            std::filesystem::weakly_canonical(options.dataDir);
+        const std::filesystem::path currentPath = std::filesystem::current_path();
+
+        if (options.reset) {
+            // Refuse to reset root or directories outside the current working directory.
+            auto rel = std::filesystem::relative(canonicalDataDir, currentPath);
+            if (rel.empty() || rel.string().find("..") != std::string::npos || rel == ".") {
+                std::cerr << "Refusing to reset unsafe directory: " << canonicalDataDir << '\n';
+                return 1;
+            }
+            std::filesystem::remove_all(options.dataDir);
+        }
 
         KeywordClassifier classifier;
         LexiconSentimentAnalyzer sentimentAnalyzer;
