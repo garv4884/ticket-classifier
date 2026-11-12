@@ -158,6 +158,34 @@ void testServiceAndIdempotency() {
     CHECK(angry.sentiment == Sentiment::ANGRY);
     CHECK(angry.finalState == "ESCALATED");
     CHECK(angry.ticketId == "TKT-0002");  // rejected/duplicate submissions consume no ids
+
+    // Critical P0 ticket should always escalate even when sentiment is neutral/polite
+    const SubmissionResult p0Neutral = service.submit(
+        {"Database server down", "Production database is completely offline and unreachable", "P0"});
+    CHECK(p0Neutral.status == SubmissionStatus::CREATED);
+    CHECK(p0Neutral.finalState == "ESCALATED");
+
+    // Input length limit checks
+    std::string longSubject(TicketService::kMaxSubjectLength + 1, 'a');
+    CHECK(service.submit({longSubject, "Valid description", "P1"}).status == SubmissionStatus::REJECTED);
+
+    std::string longDesc(TicketService::kMaxDescriptionLength + 1, 'b');
+    CHECK(service.submit({"Valid subject", longDesc, "P1"}).status == SubmissionStatus::REJECTED);
+}
+
+void testIdGeneratorThreadSafety() {
+    IdGenerator gen(1);
+    const std::string id1 = gen.next();
+    const std::string id2 = gen.next();
+    CHECK(id1 == "TKT-0001");
+    CHECK(id2 == "TKT-0002");
+}
+
+void testShoutingAcronyms() {
+    const LexiconSentimentAnalyzer analyzer;
+    // Acronyms like API, AWS, SQL shouldn't trigger shouting penalty
+    SentimentResult res = analyzer.analyze("API is down");
+    CHECK(res.label == Sentiment::NEUTRAL);
 }
 
 }  // namespace
@@ -169,6 +197,8 @@ int main() {
     testDetailExtraction();
     testStateTransitions();
     testServiceAndIdempotency();
+    testIdGeneratorThreadSafety();
+    testShoutingAcronyms();
 
     std::cout << (checks - failures) << "/" << checks << " checks passed\n";
     return failures == 0 ? 0 : 1;

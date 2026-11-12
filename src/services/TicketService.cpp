@@ -31,7 +31,13 @@ SubmissionResult TicketService::submit(const TicketRequest& request) {
     const std::string subject = text::trim(request.subject);
     const std::string description = text::trim(request.description);
     if (subject.empty()) return rejected("Subject must not be empty.");
+    if (subject.size() > kMaxSubjectLength) {
+        return rejected("Subject exceeds maximum length of " + std::to_string(kMaxSubjectLength) + " characters.");
+    }
     if (description.empty()) return rejected("Description must not be empty.");
+    if (description.size() > kMaxDescriptionLength) {
+        return rejected("Description exceeds maximum length of " + std::to_string(kMaxDescriptionLength) + " characters.");
+    }
     const std::optional<Priority> priority = parsePriority(request.priority);
     if (!priority) return rejected("Invalid priority '" + request.priority + "'. Use P0, P1 or P2.");
 
@@ -78,7 +84,10 @@ SubmissionResult TicketService::submit(const TicketRequest& request) {
 }
 
 bool TicketService::needsEscalation(const Ticket& ticket) {
-    return ticket.priority() == Priority::P0 && ticket.sentiment().label == Sentiment::ANGRY;
+    // Critical (P0) tickets always need escalation to on-call engineers.
+    // Also escalate high-priority (P1) tickets if the customer is angry.
+    return ticket.priority() == Priority::P0 ||
+           (ticket.priority() == Priority::P1 && ticket.sentiment().label == Sentiment::ANGRY);
 }
 
 SubmissionResult TicketService::rejected(const std::string& reason) {

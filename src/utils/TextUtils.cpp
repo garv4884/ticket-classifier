@@ -72,9 +72,11 @@ bool containsPhrase(const std::string& normalizedText, const std::string& phrase
 }
 
 std::regex labelledIdPattern(const std::string& labelAlternatives) {
-    // label, optional "id/no/number", optional "is", optional '#' or ':', then the id
+    // label, optional "id/no/number", optional "is", optional '#' or ':', then the id.
+    // The id must have at least one digit and consist of alphanumeric chars and hyphens.
+    // Avoiding ambiguous overlapping nested quantifiers (e.g. ([A-Za-z]*-?\d...)) prevents catastrophic backtracking (ReDoS).
     return std::regex("\\b(?:" + labelAlternatives +
-                          ")\\s*(?:id|no\\.?|number)?\\s*(?:is\\s+)?[#:]?\\s*([A-Za-z]*-?\\d[A-Za-z0-9-]*)",
+                          ")\\s*(?:id|no\\.?|number)?\\s*(?:is\\s+)?[#:]?\\s*([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)",
                       std::regex::icase);
 }
 
@@ -140,7 +142,12 @@ std::string unescapeField(const std::string& value) {
 
 std::string currentTimestamp() {
     const std::time_t now = std::time(nullptr);
-    const std::tm local = *std::localtime(&now);
+    std::tm local{};
+#if defined(_WIN32) || defined(_MSC_VER)
+    localtime_s(&local, &now);
+#else
+    localtime_r(&now, &local);
+#endif
     char buffer[20];
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &local);
     return buffer;

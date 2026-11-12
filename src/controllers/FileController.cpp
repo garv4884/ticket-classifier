@@ -60,7 +60,11 @@ std::vector<TicketRequest> FileController::parse(std::istream& in) {
         } else if (key == "PRIORITY") {
             lastField = &current.priority;
         } else {
-            if (lastField) *lastField += " " + trimmed;  // continuation line
+            if (lastField) {
+                if (lastField->size() < TicketService::kMaxDescriptionLength * 2) {
+                    *lastField += " " + trimmed;  // continuation line
+                }
+            }
             continue;
         }
         *lastField = text::trim(trimmed.substr(colon + 1));
